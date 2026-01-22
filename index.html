@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Data Analysis Quiz</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-100 min-h-screen py-8">
+    <div id="root"></div>
+
+```
+<script type="text/babel">
+    const { useState, useEffect } = React;
+    
+    const CheckCircle = ({ size = 24 }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+    );
+
+    const XCircle = ({ size = 24 }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+    );
+
+    const RotateCcw = ({ size = 20 }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+    );
+
+    const Clock = ({ size = 24 }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+    );
+
+    const Quiz = () => {
+        const [current, setCurrent] = useState(0);
+        const [selected, setSelected] = useState(null);
+        const [showExp, setShowExp] = useState(false);
+        const [score, setScore] = useState(0);
+        const [done, setDone] = useState(false);
+        const [timer, setTimer] = useState(120);
+        const [canAnswer, setCanAnswer] = useState(false);
+
+        const questions = [
+            {
+                q: "Analyze the stock price data below from Yahoo Finance. The price dropped from £45 to £27 (40% decline) over 6 months. According to the lecture's emphasis on financial literacy, what demonstrates proper understanding?",
+                visual: {
+                    type: 'chart',
+                    data: ['Jan: £45', 'Feb: £44', 'Mar: £42', 'Apr: £38', 'May: £35', 'Jun: £30', 'Jul: £27']
+                },
+                opts: [
+                    "The 40% decline is complete analysis - no further investigation needed",
+                    "Calculate exact daily percentage changes for precision",
+                    "Combine price data with: company announcements (qualitative), sector comparison from LSEG, fundamental data from annual reports, and ONS macroeconomic indicators",
+                    "Yahoo Finance secondary data is unreliable and should be ignored"
+                ],
+                ans: 2,
+                exp: "The lecture emphasizes financial literacy requires 'accessing, interpreting, and utilizing financial data.' A price decline is DATA. The Excel task is a STARTING POINT. True literacy means asking WHY by checking: company news (qualitative context), sector performance (company-specific?), fundamentals (10-K), and macro context (ONS). This integrates multiple source types."
+            },
+            {
+                q: "Below is a simplified income statement from Yahoo Finance. Based on the lecture's discussion, what critical limitation exists in using ONLY this standardized secondary source?",
+                visual: {
+                    type: 'table',
+                    headers: ['Metric', '2023', '2022', '2021'],
+                    rows: [
+                        ['Revenue', '£500M', '£480M', '£450M'],
+                        ['Operating Income', '£75M', '£70M', '£65M'],
+                        ['Net Income', '£45M', '£42M', '£38M']
+                    ]
+                },
+                opts: [
+                    "Yahoo Finance data is always inaccurate",
+                    "This lacks detailed notes, segment breakdowns, revenue recognition policies, and management commentary found in primary 10-K filings - you see WHAT but not WHY or HOW",
+                    "Data should be in dollars, making it unusable",
+                    "Three years is insufficient - need 10 years minimum"
+                ],
+                ans: 1,
+                exp: "Primary sources (10-K) contain 'notes to accounts,' 'segment disclosures,' and 'management commentary.' Yahoo Finance 'reorganises data' in 'standardised' formats. You get numbers but lose: (1) accounting policies (how was revenue recognized?), (2) segment info (which divisions grew?), (3) MD&A context (why margins changed?), (4) risk disclosures. Need BOTH secondary (comparison) and primary (depth)."
+            },
+            {
+                q: "The chart shows revenue by segment from a 10-K filing. 'International' grew 45% while 'Domestic' grew 5%. What type of data is this and why does its SOURCE matter?",
+                visual: {
+                    type: 'chart',
+                    data: ['Domestic: £250M', 'International: £180M', 'Digital: £120M', 'Manufacturing: £80M', 'Other: £70M']
+                },
+                opts: [
+                    "Qualitative data because it describes different segments",
+                    "Quantitative data (numerical revenue), from PRIMARY 10-K 'segment disclosures' showing where growth comes from - critical for understanding business direction",
+                    "Secondary data that Bloomberg calculated from stock prices",
+                    "Cannot be classified as qualitative or quantitative"
+                ],
+                ans: 1,
+                exp: "Quantitative = 'numerical information that can be measured' (revenue figures). Segment data comes from PRIMARY sources - '10-K: annual report' containing 'segment disclosures.' Matters because: (1) original company-reported data, not interpretation, (2) reveals WHERE growth happens, (3) audited and regulated. Understanding source type affects reliability and detail."
+            },
+            {
+                q: "Historical price data from Yahoo Finance shows high volatility with 25% range. To properly contextualize this quantitative data, which additional sources should be consulted?",
+                visual: {
+                    type: 'chart',
+                    data: ['Jan: £32', 'Feb: £28', 'Mar: £35', 'Apr: £30', 'May: £38', 'Jun: £33', 'Jul: £40', 'Aug: £35', 'Sep: £32', 'Oct: £36', 'Nov: £34', 'Dec: £38']
+                },
+                opts: [
+                    "No additional sources needed - pattern tells complete story",
+                    "Only verify same numbers on other financial websites",
+                    "Consult: 10-K (fundamental performance), Financial Times (sector context/news), Bloomberg/LSEG (beta/volatility metrics), SEC 8-K (material events during price spikes)",
+                    "Historical prices are secondary data and unreliable"
+                ],
+                ans: 2,
+                exp: "Excel task is a STARTING POINT: 'Create chart and identify trends.' Financial literacy = 'process information and make informed decisions' - not just observe. Volatility needs context: (1) PRIMARY sources (10-K, 8-K) explain business events, (2) SECONDARY (Bloomberg) provide volatility metrics and peer comparison, (3) Financial press explains market sentiment. Multiple source types enable complete analysis."
+            },
+            {
+                q: "This table shows Bloomberg ratios for Company A. The 10-K shows revenue £500M and net income £45M. Bloomberg calculates P/E as 18.5. What does this illustrate about primary vs secondary sources?",
+                visual: {
+                    type: 'table',
+                    headers: ['Metric', 'Value', 'Source'],
+                    rows: [
+                        ['Revenue', '£500M', '10-K Primary'],
+                        ['Net Income', '£45M', '10-K Primary'],
+                        ['EPS', '£2.25', 'Calculated'],
+                        ['Stock Price', '£41.63', 'Market'],
+                        ['P/E Ratio', '18.5', 'Bloomberg Secondary']
+                    ]
+                },
+                opts: [
+                    "Bloomberg's P/E is more accurate than 10-K data",
+                    "Primary sources (10-K) provide underlying company-reported data; secondary sources (Bloomberg) add VALUE by calculating ratios, providing market data, enabling comparison - different purposes",
+                    "10-K should include P/E ratio, making Bloomberg unnecessary",
+                    "All data sources provide identical information"
+                ],
+                ans: 1,
+                exp: "PRIMARY (10-K via SEC) provides 'consolidated financial statements' with original data. SECONDARY 'reorganises and interprets data' - Bloomberg takes 10-K numbers, adds market price (not in 10-K), calculates ratios, provides 'company financial ratios.' Why Bloomberg vs Yahoo Finance? Bloomberg ADDS analytics to primary data. Need both: primary for base data, secondary for analysis tools."
+            },
+            {
+                q: "This chart shows UK ONS data: GDP growth, inflation, unemployment, wages. A retail analyst uses this with company data. How should this government data be classified and why is it relevant?",
+                visual: {
+                    type: 'chart',
+                    data: ['GDP Growth: 2.1%', 'CPI Inflation: 4.2%', 'Unemployment: 4.5%', 'Wage Growth: 5.8%']
+                },
+                opts: [
+                    "Secondary qualitative data with no company relevance",
+                    "Primary quantitative data from authoritative government sources; provides macroeconomic context - e.g., 4.2% inflation and 5.8% wage growth affect retail costs and consumer spending",
+                    "Too aggregated to be useful for individual companies",
+                    "Should obtain from Bloomberg, not ONS, for accuracy"
+                ],
+                ans: 1,
+                exp: "Lecture lists ONS under 'Other Sources' providing 'GDP,' 'Inflation (CPI),' 'Employment statistics.' This is PRIMARY (original authoritative) and QUANTITATIVE (numerical). Why matters: financial literacy for 'business planning: forecasting' and 'risk assessment: sector conditions.' If inflation is 4.2% but retailer costs rose 8%, that's significant. If wages grow 5.8%, spending power changes."
+            },
+            {
+                q: "Company cash flow statement from annual report (primary) and Bloomberg (secondary) show identical numbers. Given this, why emphasize consulting BOTH sources?",
+                visual: {
+                    type: 'table',
+                    headers: ['Item', 'Amount', 'Annual Report', 'Bloomberg'],
+                    rows: [
+                        ['Operating CF', '£85M', '✓', '✓'],
+                        ['Investing CF', '-£45M', '✓', '✓'],
+                        ['Financing CF', '-£20M', '✓', '✓'],
+                        ['Notes/Details', '15 pages', '✓', '✗'],
+                        ['5-Yr Compare', 'Manual', '✗', '✓'],
+                        ['Peer Benchmark', 'N/A', '✗', '✓']
+                    ]
+                },
+                opts: [
+                    "If numbers identical, only need one source - prefer free",
+                    "Primary sources provide detailed notes explaining WHAT comprises each line and WHY changes occurred; secondary enables quick comparison across time and peers - different analytical purposes",
+                    "Bloomberg always superior due to more features",
+                    "Annual reports outdated when secondary sources display data"
+                ],
+                ans: 1,
+                exp: "Annual reports have 'notes to accounts' while Bloomberg provides 'historical series' and comparison. Even with IDENTICAL numbers, different needs: (1) PRIMARY has 'notes' explaining £45M investing was factory acquisition, or detailing working capital changes. (2) SECONDARY enables 'compare companies, analyse performance' with 5-year trends and peer benchmarks. Comprehensive analysis needs depth (primary) AND breadth (secondary)."
+            },
+            {
+                q: "This quarterly revenue chart from investor relations shows a dip in Q3 22. Management commentary states: 'Q3 weakness due to supply chain disruptions; Q4 recovery expected.' How should this combination be classified?",
+                visual: {
+                    type: 'chart',
+                    data: ['Q1 22: £120M', 'Q2 22: £125M', 'Q3 22: £110M', 'Q4 22: £115M', 'Q1 23: £130M', 'Q2 23: £135M', 'Q3 23: £140M', 'Q4 23: £145M']
+                },
+                opts: [
+                    "Both chart and commentary are qualitative since from company",
+                    "Both quantitative since commentary refers to quarters (numbers)",
+                    "Chart is quantitative data (measurable metrics); commentary is qualitative data (explanatory context); together from investor relations they're PRIMARY source providing complete picture",
+                    "Charts are always secondary regardless of source"
+                ],
+                ans: 2,
+                exp: "Tests multiple concepts: (1) QUANTITATIVE = 'numerical measurable' (revenue) vs QUALITATIVE = 'non-numerical context/explanations' (management's WHY Q3 declined). (2) PRIMARY vs SECONDARY: 'company investor relations websites' are PRIMARY containing 'management commentary.' (3) Integration: qualitative 'provides context for interpreting quantitative metrics' - numbers show dip; management explains cause and prognosis."
+            },
+            {
+                q: "Analyst downloads 5 years of data from Yahoo Finance showing declining profit margins. To demonstrate advanced financial literacy per the lecture, what analysis should follow?",
+                visual: {
+                    type: 'chart',
+                    data: ['2019: 18.5%', '2020: 17.2%', '2021: 15.8%', '2022: 14.1%', '2023: 12.6%']
+                },
+                opts: [
+                    "Declining trend is self-explanatory, no further analysis needed",
+                    "Check if Excel calculated percentages correctly",
+                    "Investigate using: 10-K 'notes' (cost structure/policies), MD&A (management's explanation), Financial Times (sector trends?), LSEG (peer comparison - company-specific or industry?), ONS (input cost inflation?)",
+                    "Switch to Bloomberg since Yahoo Finance has incorrect data"
+                ],
+                ans: 2,
+                exp: "Excel task teaches 'identify trends' - that's step ONE. Financial literacy = 'process information and make informed decisions.' Declining margins trigger questions: (1) WHY? PRIMARY sources - 10-K 'notes' reveal if COGS rose or revenue recognition changed; MD&A has management explanation. (2) Unique or widespread? SECONDARY (LSEG) shows peer margins; FT discusses sector. (3) External factors? ONS shows input costs. Multiple source types for comprehensive understanding."
+            },
+            {
+                q: "This table compares SAME company's P/E ratio from three sources showing different values. What explains this discrepancy and what's the implication?",
+                visual: {
+                    type: 'table',
+                    headers: ['Source', 'P/E Ratio', 'Type', 'Method'],
+                    rows: [
+                        ['Yahoo Finance', '18.2', 'Secondary', 'Trailing 12mo'],
+                        ['Bloomberg', '19.7', 'Secondary', 'Forward estimated'],
+                        ['Company 10-K', 'N/A', 'Primary', 'Not provided'],
+                        ['Financial Times', '~18-20', 'Secondary', 'Analyst commentary']
+                    ]
+                },
+                opts: [
+                    "One must be wrong; only use most expensive source (Bloomberg)",
+                    "Different SECONDARY sources use different methodologies (trailing vs forward P/E), calculation timings, earnings estimates; PRIMARY sources (10-K) provide underlying data but not ratios - must understand WHAT each shows and HOW calculated",
+                    "All secondary sources unreliable; only calculate from 10-K yourself",
+                    "P/E ratios are qualitative data and therefore subjective"
+                ],
+                ans: 1,
+                exp: "Tests sophisticated understanding: (1) PRIMARY vs SECONDARY: 10-K provides 'income statement' with earnings, but calculating/comparing P/E is what SECONDARY sources do - they 'reorganise and interpret.' (2) SECONDARY variation: Yahoo uses last year's earnings (trailing), Bloomberg uses forecasts (forward), FT provides ranges. (3) FINANCIAL LITERACY: 'ability to PROCESS information' - processing means understanding '18.2' and '19.7' aren't contradictions but different metrics. Advanced users know WHICH P/E answers their question (trailing for past, forward for valuation)."
+            }
+        ];
+
+        useEffect(() => {
+            if (showExp || done) return;
+            const t = setInterval(() => {
+                setTimer((p) => {
+                    if (p <= 1) {
+                        setCanAnswer(true);
+                        return 0;
+                    }
+                    return p - 1;
+                });
+            }, 1000);
+            return () => clearInterval(t);
+        }, [current, showExp, done]);
+
+        const formatTime = (s) => {
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return `${m}:${sec.toString().padStart(2, '0')}`;
+        };
+
+        const handleAnswer = (i) => {
+            if (!canAnswer) return;
+            setSelected(i);
+            setShowExp(true);
+            if (i === questions[current].ans) setScore(score + 1);
+        };
+
+        const handleNext = () => {
+            if (current < questions.length - 1) {
+                setCurrent(current + 1);
+                setSelected(null);
+                setShowExp(false);
+                setTimer(120);
+                setCanAnswer(false);
+            } else {
+                setDone(true);
+            }
+        };
+
+        const reset = () => {
+            setCurrent(0);
+            setSelected(null);
+            setShowExp(false);
+            setScore(0);
+            setDone(false);
+            setTimer(120);
+            setCanAnswer(false);
+        };
+
+        if (done) {
+            const pct = Math.round((score / questions.length) * 100);
+            return (
+                <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-2xl">
+                    <div className="text-center">
+                        <h2 className="text-4xl font-bold mb-4">Quiz Complete! 🎉</h2>
+                        <div className={`text-6xl font-bold mb-4 ${pct >= 80 ? 'text-green-600' : pct >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {score}/{questions.length}
+                        </div>
+                        <p className="text-xl mb-2">You scored {pct}%</p>
+                        <p className="text-gray-600 mb-6">
+                            {pct >= 80 && "Outstanding! You analyze financial data like a professional."}
+                            {pct >= 60 && pct < 80 && "Good work! Review explanations to master visual analysis."}
+                            {pct < 60 && "Keep practicing! Review lecture materials and try again."}
+                        </p>
+                        <button onClick={reset} className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 mx-auto hover:bg-blue-700">
+                            <RotateCcw /> Retake Quiz
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        const q = questions[current];
+        const prog = ((current + 1) / questions.length) * 100;
+
+        return (
+            <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-2xl">
+                <h1 className="text-3xl font-bold text-center text-blue-700 mb-4">Financial Data Analysis Quiz</h1>
+                
+                {!showExp && (
+                    <div className="mb-6 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                        <div className="flex items-center justify-center gap-3">
+                            <Clock size={28} className={timer > 60 ? 'text-blue-600' : timer > 30 ? 'text-yellow-600' : 'text-green-600'} />
+                            <div className="text-center">
+                                <div className={`text-3xl font-bold ${timer > 60 ? 'text-blue-600' : timer > 30 ? 'text-yellow-600' : 'text-green-600'}`}>
+                                    {formatTime(timer)}
+                                </div>
+                                <div className="text-sm text-gray-600 mt-1">{canAnswer ? "✓ You may answer" : "⏳ Analyze carefully"}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                <div className="mb-6">
+                    <div className="flex justify-between mb-2">
+                        <span className="text-sm font-semibold">Question {current + 1} of {questions.length}</span>
+                        <span className="text-sm font-bold text-blue-600">Score: {score}/{questions.length}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div className="bg-blue-600 h-3 rounded-full transition-all" style={{ width: `${prog}%` }} />
+                    </div>
+                </div>
+
+                {/* Visual Data */}
+                <div className="mb-6 p-5 bg-slate-50 rounded-xl border-2 border-slate-200">
+                    {q.visual.type === 'chart' && (
+                        <div className="bg-white p-4 rounded-lg">
+                            <h3 className="font-bold mb-3 text-center">{q.visual.data[0].includes(':') ? 'Data Chart' : 'Financial Data'}</h3>
+                            <div className="space-y-2">
+                                {q.visual.data.map((d, i) => (
+                                    <div key={i} className="flex justify-between items-center bg-blue-50 p-3 rounded">
+                                        <span className="font-medium">{d.split(':')[0]}</span>
+                                        <span className="font-bold text-blue-700">{d.split(':')[1]}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {q.visual.type === 'table' && (
+                        <div className="bg-white p-4 rounded-lg overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-blue-100">
+                                        {q.visual.headers.map((h, i) => (
+                                            <th key={i} className="p-3 text-left font-bold">{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {q.visual.rows.map((row, i) => (
+                                        <tr key={i} className="border-t">
+                                            {row.map((cell, j) => (
+                                                <td key={j} className="p-3">{cell}</td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                <h2 className="text-lg font-bold mb-6">{q.q}</h2>
+
+                <div className="space-y-3 mb-6">
+                    {q.opts.map((opt, i) => {
+                        let cls = "w-full text-left p-4 rounded-lg border-2 transition-all ";
+                        if (selected === null) {
+                            cls += canAnswer ? "border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer" : "border-gray-300 bg-gray-50 cursor-not-allowed opacity-60";
+                        } else if (i === q.ans) {
+                            cls += "border-green-500 bg-green-50";
+                        } else if (i === selected) {
+                            cls += "border-red-500 bg-red-50";
+                        } else {
+                            cls += "border-gray-300 opacity-50";
+                        }
+
+                        return (
+                            <button key={i} onClick={() => handleAnswer(i)} disabled={!canAnswer || showExp} className={cls}>
+                                <div className="flex justify-between items-start gap-3">
+                                    <span className="text-sm flex-1">{opt}</span>
+                                    {showExp && i === q.ans && <CheckCircle />}
+                                    {showExp && i === selected && i !== q.ans && <XCircle />}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {!canAnswer && !showExp && (
+                    <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                        <p className="text-sm text-yellow-800">⏳ Read carefully. Answer when timer reaches 0:00.</p>
+                    </div>
+                )}
+
+                {showExp && (
+                    <div className="mb-6 p-5 bg-blue-50 border-l-4 border-blue-600 rounded">
+                        <h3 className="font-bold mb-2 text-blue-900">Explanation:</h3>
+                        <p className="text-gray-700 text-sm">{q.exp}</p>
+                    </div>
+                )}
+
+                {showExp && (
+                    <button onClick={handleNext} className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700">
+                        {current < questions.length - 1 ? 'Next Question →' : 'See Results 🎯'}
+                    </button>
+                )}
+            </div>
+        );
+    };
+
+    ReactDOM.render(<Quiz />, document.getElementById('root'));
+</script>
+```
+
+</body>
+</html>
